@@ -16,6 +16,10 @@ H = 175;
 wall = 3;     
 rad = 8;      
 $fn = 60;     
+speaker_ring_outer = 22;
+speaker_ring_inner = 18.5;
+speaker_ring_depth = 2;
+touch_pad_y = D - wall - 5;
 
 if (export_part == "both") {
     translate([-35, 0, 0]) front_half();
@@ -70,18 +74,10 @@ module hollow_shell() {
 }
 
 module all_cutouts() {
-    translate([W/2, D/2, H - 2]) cylinder(d=40.5, h=5); // Glass Flush Mount
+    translate([W/2, D/2, H - 5]) cylinder(d=40.5, h=5); // Glass Flush Mount
     translate([W/2 - 6, D/2 - 3, -1]) cube([12, 6, wall+5]); // USB-C
     translate([W/2 - 14, -1, 96]) cube([28, wall+5, 28]); // OLED
     translate([W/2 + 15, -1, 142]) rotate([-90, 0, 0]) cylinder(d=3, h=wall+5, $fn=20); // Mic
-    
-    // 4x COPPER TOUCH SENSOR PADS (Recessed squares with center wire holes)
-    for (i = [0 : 3]) { 
-        translate([W - 1, D/2, 125 - (i * 15)]) rotate([0, 90, 0]) {
-            cube([10, 10, 5], center=true); // The recess for copper tape
-            cylinder(d=2, h=wall+5, center=true); // The hole for the wire
-        }
-    }
     for (x = [-8 : 2 : 8]) { // Speaker Grill
         for (z = [-8 : 2 : 8]) {
             if (sqrt(x*x + z*z) <= 8.5) {
@@ -109,6 +105,22 @@ module board_rails_with_stops(board_w, y_center, z_start, h) {
     translate([W/2 - board_w/2, y_center - 1, z_start - 3]) cube([board_w, 4, 3]);
     // Top Z-Stop
     translate([W/2 - board_w/2, y_center - 1, z_start + h]) cube([board_w, 2, 2]);
+}
+
+module speaker_retaining_ring() {
+    translate([W/2, wall, 35]) rotate([-90, 0, 0]) difference() {
+        cylinder(d=speaker_ring_outer, h=speaker_ring_depth);
+        translate([0, 0, -1]) cylinder(d=speaker_ring_inner, h=speaker_ring_depth + 2);
+    }
+}
+
+module touch_pad_cutouts() {
+    for (i = [0 : 3]) { 
+        translate([W - 1, touch_pad_y, 125 - (i * 15)]) rotate([0, 90, 0]) {
+            cube([10, 10, 5], center=true); // The recess for copper tape
+            cylinder(d=2, h=wall+5, center=true); // The hole for the wire
+        }
+    }
 }
 
 // Generic Thin Reflector Basket (Replaces the massive block)
@@ -150,6 +162,8 @@ module front_half() {
             cube([32, 32, 2], center=true);
             cube([28, 28, 4], center=true);
         }
+
+        speaker_retaining_ring();
         
         // Round Mic Bracket
         translate([W/2 + 15, wall + 2, 142]) rotate([90,0,0]) difference() {
@@ -209,5 +223,7 @@ module back_half() {
         translate([W - wall - 3.5, D+1, 18.5]) rotate([90,0,0]) cylinder(d=6.5, h=wall+2);
         translate([wall + 3.5, D+1, 133.5]) rotate([90,0,0]) cylinder(d=6.5, h=wall+2);
         translate([W - wall - 3.5, D+1, 133.5]) rotate([90,0,0]) cylinder(d=6.5, h=wall+2);
+
+        touch_pad_cutouts();
     }
 }
